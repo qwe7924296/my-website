@@ -24,35 +24,36 @@
         const { ref } = Vue;
 
         const app = Vue.createApp({
-            setup() {
-                const qrResult = ref(null);
-                let codeReader = new ZXing.BrowserMultiFormatReader();
-
-                async function scanQRCode() {
+            data() {
+                return {
+                    qrResult: null,
+                    codeReader: new ZXing.BrowserMultiFormatReader()
+                };
+            },
+            methods: {
+                async scanQRCode() {
                     try {
                         const devices = await navigator.mediaDevices.enumerateDevices();
                         const rearCamera = devices.find(device => device.kind === 'videoinput' && /back|rear/i.test(device.label));
                         const cameraId = rearCamera ? rearCamera.deviceId : undefined;
 
-                        codeReader.decodeFromVideoDevice(cameraId, 'reader', (result, err) => {
+                        this.codeReader.decodeFromVideoDevice(cameraId, 'reader', (result, err) => {
                             if (result) {
-                                qrResult.value = result.text;
-                                codeReader.reset();
+                                this.qrResult = result.text;
+                                this.codeReader.reset();
 
-                                // Extract number from the QR code result
-                                const numberMatch = qrResult.value.match(/\d+/);
+                                const numberMatch = this.qrResult.match(/\d+/);
                                 if (numberMatch) {
                                     const no = numberMatch[0];
-                                    sendToBackend(no);
+                                    this.sendToBackend(no);
                                 }
                             }
                         });
                     } catch (error) {
                         console.error("Error initializing camera", error);
                     }
-                }
-
-                function sendToBackend(no) {
+                },
+                sendToBackend(no) {
                     fetch("https://69bc-114-47-218-48.ngrok-free.app/search", {
                         method: "POST",
                         headers: {
@@ -63,17 +64,11 @@
                     .then(response => response.json())
                     .then(data => {
                         console.log(data);
-                        // Handle the response data as needed
                     })
                     .catch(error => {
                         console.error("Error sending data to backend:", error);
                     });
                 }
-
-                return {
-                    qrResult,
-                    scanQRCode
-                };
             }
         });
 
