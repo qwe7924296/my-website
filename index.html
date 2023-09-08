@@ -74,9 +74,10 @@
                   "reader",
                   (result, err) => {
                     if (result) {
-                      const numberMatch = result.text.match(/\d+/);
-                      if (numberMatch) {
-                        this.qrResult = numberMatch[0];
+                      const urlPattern = /https:\/\/qr\.ioi\.tw\/(\d+)/; // 正則表達式匹配URL
+                      const numberMatch = result.text.match(urlPattern);
+                      if (numberMatch && numberMatch[1]) {
+                        this.qrResult = numberMatch[1];
                         this.sendToBackend(this.qrResult);
                       } else {
                         this.qrResult = result.text;
