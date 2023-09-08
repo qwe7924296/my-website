@@ -46,7 +46,6 @@
         data() {
           return {
             qrResult: null,
-            codeReader: new ZXing.BrowserMultiFormatReader(),
             isScanning: false,
           };
         },
@@ -91,7 +90,7 @@
             }
           },
           sendToBackend(no) {
-            fetch("https://3661-114-47-218-48.ngrok-free.app/search", {
+            fetch("https://dfd0-114-47-218-48.ngrok-free.app/search", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
