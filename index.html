@@ -8,6 +8,12 @@
     <script src="https://unpkg.com/vue@next"></script>
     <!-- ZXing Library for QR Code scanning -->
     <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <!-- VConsole -->
+    <script src="https://cdn.jsdelivr.net/npm/vconsole@3.9.0/dist/vconsole.min.js"></script>
+    <script>
+        // 初始化 VConsole
+        var vConsole = new VConsole();
+    </script>
 </head>
 <body>
     <div id="app">
@@ -38,24 +44,22 @@
                         const cameraId = rearCamera ? rearCamera.deviceId : undefined;
 
                         this.codeReader.decodeFromVideoDevice(cameraId, 'reader', (result, err) => {
-if (result) {
-    console.log("Scanned QR Code:", result.text); // 加入這一行
-    this.qrResult = result.text;
-    this.codeReader.reset();
+                            if (result) {
+                                this.qrResult = result.text;
+                                this.codeReader.reset();
 
-    const numberMatch = this.qrResult.match(/\d+/);
-    if (numberMatch) {
-        const no = numberMatch[0];
-        this.sendToBackend(no);
-    }
-}
+                                const numberMatch = this.qrResult.match(/\d+/);
+                                if (numberMatch) {
+                                    const no = numberMatch[0];
+                                    this.sendToBackend(no);
+                                }
+                            }
                         });
                     } catch (error) {
                         console.error("Error initializing camera", error);
                     }
                 },
                 sendToBackend(no) {
-                     console.log("Sending request to backend with no:", no); // 加入這一行
                     fetch("https://3661-114-47-218-48.ngrok-free.app/search", {
                         method: "POST",
                         headers: {
@@ -63,17 +67,13 @@ if (result) {
                         },
                         body: JSON.stringify({ no: no })
                     })
-    .then(response => {
-        console.log("Received response from backend:", response); // 加入這一行
-        return response.json();
-    })
-    .then(data => {
-        console.log("Parsed data from backend:", data); // 加入這一行
-        alert(JSON.stringify(data));
-    })
-    .catch(error => {
-        console.error("Error during the request:", error); // 修改這一行
-    });
+                    .then(response => response.json())
+                    .then(data => {
+                        alert(JSON.stringify(data));
+                    })
+                    .catch(error => {
+                        console.error("Error sending data to backend:", error);
+                    });
                 }
             }
         });
