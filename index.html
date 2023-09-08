@@ -6,13 +6,13 @@
     <title>QR Code Scanner with Vue 3</title>
     <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@next"></script>
-    <!-- html5-qrcode CDN -->
-    <script src="https://cdn.rawgit.com/mebjas/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <!-- ZXing Library for QR Code scanning -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
 </head>
 <body>
     <div id="app">
         <div style="float: left; width: 50%;">
-            <div id="reader" style="width: 300px; height: 300px;"></div>
+            <video id="reader" style="width: 300px; height: 300px;" autoplay playsinline></video>
         </div>
         <div style="float: right; width: 50%;">
             <button @click="scanQRCode">Scan QR Code</button>
@@ -21,65 +21,63 @@
     </div>
 
     <script>
-        // Your Vue 3 code will go here
+        const { ref } = Vue;
+
+        const app = Vue.createApp({
+            setup() {
+                const qrResult = ref(null);
+                let codeReader = new ZXing.BrowserMultiFormatReader();
+
+                async function scanQRCode() {
+                    try {
+                        const devices = await navigator.mediaDevices.enumerateDevices();
+                        const rearCamera = devices.find(device => device.kind === 'videoinput' && /back|rear/i.test(device.label));
+                        const cameraId = rearCamera ? rearCamera.deviceId : undefined;
+
+                        codeReader.decodeFromVideoDevice(cameraId, 'reader', (result, err) => {
+                            if (result) {
+                                qrResult.value = result.text;
+                                codeReader.reset();
+
+                                // Extract number from the QR code result
+                                const numberMatch = qrResult.value.match(/\d+/);
+                                if (numberMatch) {
+                                    const no = numberMatch[0];
+                                    sendToBackend(no);
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error("Error initializing camera", error);
+                    }
+                }
+
+                function sendToBackend(no) {
+                    fetch("https://69bc-114-47-218-48.ngrok-free.app/search", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ no: no })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        // Handle the response data as needed
+                    })
+                    .catch(error => {
+                        console.error("Error sending data to backend:", error);
+                    });
+                }
+
+                return {
+                    qrResult,
+                    scanQRCode
+                };
+            }
+        });
+
+        app.mount("#app");
     </script>
 </body>
 </html>
-
-
-<script>
-  const app = Vue.createApp({
-    data() {
-        return {
-            qrResult: null
-        };
-    },
-    methods: {
-        scanQRCode() {
-            const html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(
-                { facingMode: "environment" }, // Use the rear camera
-                {
-                    fps: 10,
-                    qrbox: 250
-                },
-                (decodedText, decodedResult) => {
-                    // Stop scanning once a QR code is detected
-                    html5QrCode.stop();
-                    this.qrResult = decodedText;
-
-                    // Extract number from the QR code result
-                    const numberMatch = this.qrResult.match(/\d+/);
-                    if (numberMatch) {
-                        const no = numberMatch[0];
-                        this.sendToBackend(no);
-                    }
-                },
-                (errorMessage) => {
-                    console.error(`QR Code Error: ${errorMessage}`);
-                }
-            );
-        },
-        sendToBackend(no) {
-            fetch(" https://69bc-114-47-218-48.ngrok-free.app/search", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ no: no })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                // Handle the response data as needed
-            })
-            .catch(error => {
-                console.error("Error sending data to backend:", error);
-            });
-        }
-    }
-});
-
-app.mount("#app");
-
-</script>
