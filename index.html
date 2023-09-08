@@ -12,24 +12,32 @@
     el: "#app",
     data: {
       scannedValue: "",
-      qrCodeScanner: null // 將 qrCodeScanner 存儲為 Vue 實例的一部分
+      qrCodeScanner: null
     },
     methods: {
-      startScanning: function () {
+      async startScanning() {
         if (!this.qrCodeScanner) {
           this.qrCodeScanner = new Html5Qrcode("qr-reader");
         }
-        
-        this.qrCodeScanner.start(
-          { facingMode: "environment" }, // 使用後置相機
-          (decodedText, decodedResult) => {
-            this.scannedValue = decodedText;
-            this.qrCodeScanner.stop(); // 掃描到後停止掃描
-          },
-          (errorMessage) => {
-            console.error(errorMessage);
-          }
-        );
+
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const rearCamera = devices.find(device => device.kind === 'videoinput' && /back|rear/i.test(device.label));
+          const cameraId = rearCamera ? rearCamera.deviceId : undefined;
+
+          this.qrCodeScanner.start(
+            { deviceId: cameraId },
+            (decodedText, decodedResult) => {
+              this.scannedValue = decodedText;
+              this.qrCodeScanner.stop();
+            },
+            (errorMessage) => {
+              console.error(errorMessage);
+            }
+          );
+        } catch (error) {
+          console.error("Error initializing camera", error);
+        }
       },
     },
     beforeDestroy: function() {
