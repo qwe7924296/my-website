@@ -74,15 +74,15 @@
                   "reader",
                   (result, err) => {
                     if (result) {
-                      this.qrResult = result.text;
+                      const numberMatch = result.text.match(/\d+/);
+                      if (numberMatch) {
+                        this.qrResult = numberMatch[0];
+                        this.sendToBackend(this.qrResult);
+                      } else {
+                        this.qrResult = result.text;
+                      }
                       this.codeReader.reset();
                       this.isScanning = false;
-
-                      const numberMatch = this.qrResult.match(/\d+/);
-                      if (numberMatch) {
-                        const no = numberMatch[0];
-                        this.sendToBackend(no);
-                      }
                     }
                   }
                 );
