@@ -2,7 +2,7 @@
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
 <div id="app">
-  <video id="qr-reader" width="500" height="500"></video>
+  <video id="qr-reader" width="500" height="500" autoplay playsinline></video>
   <button @click="startScanning">Start Scanning</button>
   <p>Scanned Value: {{ scannedValue }}</p>
 </div>
@@ -12,15 +12,19 @@
     el: "#app",
     data: {
       scannedValue: "",
+      qrCodeScanner: null // 將 qrCodeScanner 存儲為 Vue 實例的一部分
     },
     methods: {
       startScanning: function () {
-        let qrCodeScanner = new Html5Qrcode("qr-reader");
-        qrCodeScanner.start(
+        if (!this.qrCodeScanner) {
+          this.qrCodeScanner = new Html5Qrcode("qr-reader");
+        }
+        
+        this.qrCodeScanner.start(
           { facingMode: "environment" }, // 使用後置相機
           (decodedText, decodedResult) => {
             this.scannedValue = decodedText;
-            qrCodeScanner.stop(); // 掃描到後停止掃描
+            this.qrCodeScanner.stop(); // 掃描到後停止掃描
           },
           (errorMessage) => {
             console.error(errorMessage);
@@ -28,5 +32,10 @@
         );
       },
     },
+    beforeDestroy: function() {
+      if (this.qrCodeScanner) {
+        this.qrCodeScanner.stop();
+      }
+    }
   });
 </script>
