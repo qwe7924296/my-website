@@ -38,16 +38,17 @@
                         const cameraId = rearCamera ? rearCamera.deviceId : undefined;
 
                         this.codeReader.decodeFromVideoDevice(cameraId, 'reader', (result, err) => {
-                            if (result) {
-                                this.qrResult = result.text;
-                                this.codeReader.reset();
+if (result) {
+    console.log("Scanned QR Code:", result.text); // 加入這一行
+    this.qrResult = result.text;
+    this.codeReader.reset();
 
-                                const numberMatch = this.qrResult.match(/\d+/);
-                                if (numberMatch) {
-                                    const no = numberMatch[0];
-                                    this.sendToBackend(no);
-                                }
-                            }
+    const numberMatch = this.qrResult.match(/\d+/);
+    if (numberMatch) {
+        const no = numberMatch[0];
+        this.sendToBackend(no);
+    }
+}
                         });
                     } catch (error) {
                         console.error("Error initializing camera", error);
