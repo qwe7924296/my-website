@@ -40,75 +40,76 @@
     </div>
 
     <script>
-      const { ref } = Vue;
+      document.addEventListener("DOMContentLoaded", function () {
+        const { ref } = Vue;
 
-const app = Vue.createApp({
-  data() {
-    return {
-      qrResult: null,
-      codeReader: new ZXing.BrowserMultiFormatReader(), // 初始化 codeReader
-      isScanning: false,
-    };
-  },
-        methods: {
-          async scanQRCode() {
-            if (this.isScanning) {
-              console.log("Already scanning...");
-              return;
-            }
+        const app = Vue.createApp({
+          data() {
+            return {
+              qrResult: null,
+              codeReader: new ZXing.BrowserMultiFormatReader(), // 初始化 codeReader
+              isScanning: false,
+            };
+          },
+          methods: {
+            async scanQRCode() {
+              if (this.isScanning) {
+                console.log("Already scanning...");
+                return;
+              }
 
-            this.isScanning = true;
+              this.isScanning = true;
 
-            try {
-              const devices = await navigator.mediaDevices.enumerateDevices();
-              const rearCamera = devices.find(
-                (device) =>
-                  device.kind === "videoinput" &&
-                  /back|rear/i.test(device.label)
-              );
-              const cameraId = rearCamera ? rearCamera.deviceId : undefined;
+              try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const rearCamera = devices.find(
+                  (device) =>
+                    device.kind === "videoinput" &&
+                    /back|rear/i.test(device.label)
+                );
+                const cameraId = rearCamera ? rearCamera.deviceId : undefined;
 
-              this.codeReader.decodeFromVideoDevice(
-                cameraId,
-                "reader",
-                (result, err) => {
-                  if (result) {
-                    this.qrResult = result.text;
-                    this.codeReader.reset();
-                    this.isScanning = false;
+                this.codeReader.decodeFromVideoDevice(
+                  cameraId,
+                  "reader",
+                  (result, err) => {
+                    if (result) {
+                      this.qrResult = result.text;
+                      this.codeReader.reset();
+                      this.isScanning = false;
 
-                    const numberMatch = this.qrResult.match(/\d+/);
-                    if (numberMatch) {
-                      const no = numberMatch[0];
-                      this.sendToBackend(no);
+                      const numberMatch = this.qrResult.match(/\d+/);
+                      if (numberMatch) {
+                        const no = numberMatch[0];
+                        this.sendToBackend(no);
+                      }
                     }
                   }
-                }
-              );
-            } catch (error) {
-              console.error("Error initializing camera", error);
-              this.isScanning = false;
-            }
-          },
-          sendToBackend(no) {
-            fetch("https://dfd0-114-47-218-48.ngrok-free.app/search", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ no: no }),
-            })
-              .then((response) => response.json())
-              .then((data) => {
-                alert(JSON.stringify(data));
+                );
+              } catch (error) {
+                console.error("Error initializing camera", error);
+                this.isScanning = false;
+              }
+            },
+            sendToBackend(no) {
+              fetch("https://dfd0-114-47-218-48.ngrok-free.app/search", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ no: no }),
               })
-              .catch((error) => {
-                console.error("Error sending data to backend:", error);
-              });
+                .then((response) => response.json())
+                .then((data) => {
+                  alert(JSON.stringify(data));
+                })
+                .catch((error) => {
+                  console.error("Error sending data to backend:", error);
+                });
+            },
           },
-        },
+        });
       });
-
       app.mount("#app");
     </script>
   </body>
