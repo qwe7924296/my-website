@@ -54,6 +54,7 @@
                     }
                 },
                 sendToBackend(no) {
+                     console.log("Sending request to backend with no:", no); // 加入這一行
                     fetch("https://3661-114-47-218-48.ngrok-free.app/search", {
                         method: "POST",
                         headers: {
@@ -61,13 +62,17 @@
                         },
                         body: JSON.stringify({ no: no })
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(JSON.stringify(data));
-                    })
-                    .catch(error => {
-                        console.error("Error sending data to backend:", error);
-                    });
+    .then(response => {
+        console.log("Received response from backend:", response); // 加入這一行
+        return response.json();
+    })
+    .then(data => {
+        console.log("Parsed data from backend:", data); // 加入這一行
+        alert(JSON.stringify(data));
+    })
+    .catch(error => {
+        console.error("Error during the request:", error); // 修改這一行
+    });
                 }
             }
         });
