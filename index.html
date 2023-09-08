@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <meta name="mobile-web-app-capable" content="no">
+    <meta name="mobile-web-app-capable" content="no" />
     <script>
-        if (/Mobi|Android/i.test(navigator.userAgent)) {
-            alert('Please switch to desktop mode for the best experience.');
-        }
+      if (/Mobi|Android/i.test(navigator.userAgent)) {
+        alert("Please switch to desktop mode for the best experience.");
+      }
     </script>
-    
+
     <title>QR Code Scanner with Vue 3</title>
     <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@next"></script>
@@ -19,84 +19,97 @@
     <!-- VConsole -->
     <script src="https://cdn.jsdelivr.net/npm/vconsole@3.9.0/dist/vconsole.min.js"></script>
     <script>
-        // 初始化 VConsole
-        var vConsole = new VConsole();
+      // 初始化 VConsole
+      var vConsole = new VConsole();
     </script>
-</head>
-<body>
+  </head>
+  <body>
     <div id="app">
-        <div style="float: left; width: 50%;">
-            <video id="reader" style="width: 300px; height: 300px;" autoplay playsinline></video>
-        </div>
-        <div style="float: right; width: 50%;">
-            <button @click="scanQRCode">Scan QR Code</button>
-            <div v-if="qrResult">QR Code Result: {{ qrResult }}</div>
-        </div>
+      <div style="float: left; width: 50%">
+        <video
+          id="reader"
+          style="width: 300px; height: 300px"
+          autoplay
+          playsinline
+        ></video>
+      </div>
+      <div style="float: right; width: 50%">
+        <button @click="scanQRCode">Scan QR Code</button>
+        <div v-if="qrResult">QR Code Result: {{ qrResult }}</div>
+      </div>
     </div>
 
     <script>
-        const { ref } = Vue;
+      const { ref } = Vue;
 
-        const app = Vue.createApp({
-            data() {
-                return {
-                    qrResult: null,
-                    codeReader: new ZXing.BrowserMultiFormatReader(),
-                    isScanning: false
-                };
-            },
-            methods: {
-                async scanQRCode() {
-                    if (this.isScanning) {
-                        console.log('Already scanning...');
-                        return;
-                    }
-
-                    this.isScanning = true;
-
-                    try {
-                        const devices = await navigator.mediaDevices.enumerateDevices();
-                        const rearCamera = devices.find(device => device.kind === 'videoinput' && /back|rear/i.test(device.label));
-                        const cameraId = rearCamera ? rearCamera.deviceId : undefined;
-
-                        this.codeReader.decodeFromVideoDevice(cameraId, 'reader', (result, err) => {
-                            if (result) {
-                                this.qrResult = result.text;
-                                this.codeReader.reset();
-                                this.isScanning = false;
-
-                                const numberMatch = this.qrResult.match(/\d+/);
-                                if (numberMatch) {
-                                    const no = numberMatch[0];
-                                    this.sendToBackend(no);
-                                }
-                            }
-                        });
-                    } catch (error) {
-                        console.error("Error initializing camera", error);
-                        this.isScanning = false;
-                    }
-                },
-                sendToBackend(no) {
-                    fetch("https://3661-114-47-218-48.ngrok-free.app/search", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ no: no })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(JSON.stringify(data));
-                    })
-                    .catch(error => {
-                        console.error("Error sending data to backend:", error);
-                    });
-                }
+      const app = Vue.createApp({
+        data() {
+          return {
+            qrResult: null,
+            codeReader: new ZXing.BrowserMultiFormatReader(),
+            isScanning: false,
+          };
+        },
+        methods: {
+          async scanQRCode() {
+            if (this.isScanning) {
+              console.log("Already scanning...");
+              return;
             }
-        });
 
-        app.mount("#app");
+            this.isScanning = true;
+
+            try {
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              const rearCamera = devices.find(
+                (device) =>
+                  device.kind === "videoinput" &&
+                  /back|rear/i.test(device.label)
+              );
+              const cameraId = rearCamera ? rearCamera.deviceId : undefined;
+
+              this.codeReader.decodeFromVideoDevice(
+                cameraId,
+                "reader",
+                (result, err) => {
+                  if (result) {
+                    this.qrResult = result.text;
+                    this.codeReader.reset();
+                    this.isScanning = false;
+
+                    const numberMatch = this.qrResult.match(/\d+/);
+                    if (numberMatch) {
+                      const no = numberMatch[0];
+                      this.sendToBackend(no);
+                    }
+                  }
+                }
+              );
+            } catch (error) {
+              console.error("Error initializing camera", error);
+              this.isScanning = false;
+            }
+          },
+          sendToBackend(no) {
+            fetch("https://3661-114-47-218-48.ngrok-free.app/search", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ no: no }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                alert(JSON.stringify(data));
+              })
+              .catch((error) => {
+                console.error("Error sending data to backend:", error);
+              });
+          },
+        },
+      });
+
+      app.mount("#app");
     </script>
-</body>
+  </body>
 </html>
