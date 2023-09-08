@@ -42,13 +42,14 @@
     <script>
       const { ref } = Vue;
 
-      const app = Vue.createApp({
-        data() {
-          return {
-            qrResult: null,
-            isScanning: false,
-          };
-        },
+const app = Vue.createApp({
+  data() {
+    return {
+      qrResult: null,
+      codeReader: new ZXing.BrowserMultiFormatReader(), // 初始化 codeReader
+      isScanning: false,
+    };
+  },
         methods: {
           async scanQRCode() {
             if (this.isScanning) {
