@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="mobile-web-app-capable" content="no">
+    <script>
+        if (/Mobi|Android/i.test(navigator.userAgent)) {
+            alert('Please switch to desktop mode for the best experience.');
+        }
+    </script>
+    
     <title>QR Code Scanner with Vue 3</title>
     <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@next"></script>
@@ -33,11 +41,19 @@
             data() {
                 return {
                     qrResult: null,
-                    codeReader: new ZXing.BrowserMultiFormatReader()
+                    codeReader: new ZXing.BrowserMultiFormatReader(),
+                    isScanning: false
                 };
             },
             methods: {
                 async scanQRCode() {
+                    if (this.isScanning) {
+                        console.log('Already scanning...');
+                        return;
+                    }
+
+                    this.isScanning = true;
+
                     try {
                         const devices = await navigator.mediaDevices.enumerateDevices();
                         const rearCamera = devices.find(device => device.kind === 'videoinput' && /back|rear/i.test(device.label));
@@ -47,6 +63,7 @@
                             if (result) {
                                 this.qrResult = result.text;
                                 this.codeReader.reset();
+                                this.isScanning = false;
 
                                 const numberMatch = this.qrResult.match(/\d+/);
                                 if (numberMatch) {
@@ -57,6 +74,7 @@
                         });
                     } catch (error) {
                         console.error("Error initializing camera", error);
+                        this.isScanning = false;
                     }
                 },
                 sendToBackend(no) {
