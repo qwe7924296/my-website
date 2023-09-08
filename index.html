@@ -63,7 +63,7 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        alert(data); // 使用 alert 來顯示後端的響應
+                        alert(JSON.stringify(data));
                     })
                     .catch(error => {
                         console.error("Error sending data to backend:", error);
