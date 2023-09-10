@@ -78,6 +78,7 @@
                   "reader",
                   (result, err) => {
                     if (result) {
+                      alert("Scanned data: " + result.text); // Add this line to check scanned data
                       const urlPattern = /https:\/\/qr\.ioi\.tw\/(\d+)/; // 正則表達式匹配URL
                       const numberMatch = result.text.match(urlPattern);
                       if (numberMatch && numberMatch[1]) {
@@ -97,6 +98,8 @@
               }
             },
             sendToBackend(no) {
+              console.log("sendToBackend called with no:", no); // Add this line
+
               alert("Sending to backend with no: " + no); // 使用alert確認數據
 
               var xhr = new XMLHttpRequest();
