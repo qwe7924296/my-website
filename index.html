@@ -84,7 +84,6 @@
                       }
                       this.codeReader.reset();
                       this.isScanning = false;
-                      alert(qrResult);
                     }
                   }
                 );
@@ -96,7 +95,7 @@
             sendToBackend(no) {
               alert("Sending to backend with no: " + no); // 使用alert確認數據
 
-              fetch("https://7647-114-47-202-96.ngrok-free.app/search", {
+              fetch("https://b521-114-47-202-96.ngrok-free.app/search", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
