@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <meta name="mobile-web-app-capable" content="no" />
     <script>
-      if (/Mobi|Android/i.test(navigator.userAgent)) {
-        alert("Please switch to desktop mode for the best experience.");
-      }
+        if (/Mobi|Android/i.test(navigator.userAgent)) {
+            alert("Please switch to desktop mode for the best experience.");
+        }
     </script>
 
     <title>QR Code Scanner with Vue 3</title>
@@ -19,114 +20,111 @@
     <!-- VConsole -->
     <script src="https://cdn.jsdelivr.net/npm/vconsole@3.9.0/dist/vconsole.min.js"></script>
     <script>
-      // 初始化 VConsole
-      var vConsole = new VConsole();
+        // 初始化 VConsole
+        var vConsole = new VConsole();
     </script>
-  </head>
+</head>
 
-  <body>
+<body>
     <div id="app">
-      <div style="float: left; width: 50%">
-        <video
-          id="reader"
-          style="width: 300px; height: 300px"
-          autoplay
-          playsinline
-        ></video>
-      </div>
-      <div style="float: right; width: 50%">
-        <button @click="scanQRCode">Scan QR Code</button>
-        <div v-if="qrResult">QR Code Result: {{ qrResult }}</div>
-      </div>
+        <div style="float: left; width: 50%">
+            <video id="reader" style="width: 300px; height: 300px" autoplay playsinline></video>
+        </div>
+        <div style="float: right; width: 50%">
+            <button @click="scanQRCode">Scan QR Code</button>
+            <div v-if="qrResult">QR Code Result: {{ qrResult }}</div>
+        </div>
     </div>
 
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const app = Vue.createApp({
-          data() {
-            return {
-              qrResult: null,
-              codeReader: new ZXing.BrowserMultiFormatReader(),
-              isScanning: false,
-            };
-          },
-          methods: {
-            async scanQRCode() {
-              if (this.isScanning) {
-                console.log("Already scanning...");
-                return;
-              }
+        document.addEventListener("DOMContentLoaded", function () {
+            const app = Vue.createApp({
+                data() {
+                    return {
+                        qrResult: null,
+                        codeReader: new ZXing.BrowserMultiFormatReader(),
+                        isScanning: false,
+                    };
+                },
+                methods: {
+                    async scanQRCode() {
+                        if (this.isScanning) {
+                            console.log("Already scanning...");
+                            return;
+                        }
 
-              this.isScanning = true;
+                        this.isScanning = true;
 
-              try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const rearCamera = devices.find(
-                  (device) =>
-                    device.kind === "videoinput" &&
-                    /back|rear/i.test(device.label)
-                );
-                const cameraId = rearCamera ? rearCamera.deviceId : undefined;
+                        try {
+                            const devices = await navigator.mediaDevices.enumerateDevices();
+                            const rearCamera = devices.find(
+                                (device) =>
+                                    device.kind === "videoinput" &&
+                                    /back|rear/i.test(device.label)
+                            );
+                            const cameraId = rearCamera ? rearCamera.deviceId : undefined;
 
-                this.codeReader.decodeFromVideoDevice(
-                  cameraId,
-                  "reader",
-                  (result, err) => {
-                    if (result) {
-                      const urlPattern = /https:\/\/qr\.ioi\.tw\/(\d+)/;
-                      const numberMatch = result.text.match(urlPattern);
-                      if (numberMatch && numberMatch[1]) {
-                        this.qrResult = numberMatch[1];
-                        this.sendToBackend(this.qrResult);
-                      } else {
-                        this.qrResult = result.text;
-                      }
-                      this.codeReader.reset();
-                      this.isScanning = false;
-                    }
-                  }
-                );
-              } catch (error) {
-                console.error("Error initializing camera", error);
-                this.isScanning = false;
-              }
-            },
+                            this.codeReader.decodeFromVideoDevice(
+                                cameraId,
+                                "reader",
+                                (result, err) => {
+                                    if (result) {
+                                        alert("Scanned data: " + result.text);
+                                        const urlPattern = /https:\/\/qr\.ioi\.tw\/(\d+)/;
+                                        const numberMatch = result.text.match(urlPattern);
+                                        if (numberMatch && numberMatch[1]) {
+                                            this.qrResult = numberMatch[1];
+                                            this.sendToBackend(this.qrResult);
+                                        } else {
+                                            this.qrResult = result.text;
+                                        }
+                                        this.codeReader.reset();
+                                        this.isScanning = false;
+                                    }
+                                }
+                            );
+                        } catch (error) {
+                            console.error("Error initializing camera", error);
+                            this.isScanning = false;
+                        }
+                    },
 
-            sendToBackend(no) {
-              console.log("Sending to backend with no:", no);
+                    sendToBackend(no) {
+                        console.log("Sending to backend with no:", no);
 
-              var xhr = new XMLHttpRequest();
-              xhr.open(
-                "POST",
-                "https://4234-114-47-202-96.ngrok-free.app/search",
-                true
-              );
-              xhr.setRequestHeader(
-                "Content-Type",
-                "application/json;charset=UTF-8"
-              );
+                        var xhr = new XMLHttpRequest();
+                        xhr.open(
+                            "POST",
+                            "https://4234-114-47-202-96.ngrok-free.app/search",
+                            true
+                        );
+                        xhr.setRequestHeader(
+                            "Content-Type",
+                            "application/json;charset=UTF-8"
+                        );
 
-              xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4) {
-                  if (xhr.status == 200) {
-                    alert("Received data from backend: " + xhr.responseText);
-                  } else {
-                    alert(
-                      "Error sending data to backend: " +
-                        xhr.status +
-                        " - " +
-                        xhr.statusText
-                    );
-                  }
-                }
-              };
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState == 4) {
+                                if (xhr.status == 200) {
+                                    alert("Received data from backend: " + xhr.responseText);
+                                } else {
+                                    alert(
+                                        "Error sending data to backend: " +
+                                        xhr.status +
+                                        " - " +
+                                        xhr.statusText
+                                    );
+                                }
+                            }
+                        };
 
-              xhr.send(JSON.stringify({ no: no }));
-            },
-          },
+                        xhr.send(JSON.stringify({ no: no }));
+                    },
+                },
+            });
+            app.mount("#app");
         });
-        app.mount("#app");
-      });
     </script>
-  </body>
+</body>
+
 </html>
