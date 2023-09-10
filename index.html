@@ -51,6 +51,10 @@
               isScanning: false,
             };
           },
+          mounted() {
+            this.sendToBackend("144"); // 僅作為測試
+          },
+
           methods: {
             async scanQRCode() {
               if (this.isScanning) {
@@ -111,7 +115,12 @@
                   if (xhr.status == 200) {
                     alert("Received data from backend: " + xhr.responseText);
                   } else {
-                    alert("Error sending data to backend: " + xhr.statusText);
+                    alert(
+                      "Error sending data to backend: " +
+                        xhr.status +
+                        " - " +
+                        xhr.statusText
+                    );
                   }
                 }
               };
