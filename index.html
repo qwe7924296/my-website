@@ -95,27 +95,28 @@
             sendToBackend(no) {
               alert("Sending to backend with no: " + no); // 使用alert確認數據
 
-              fetch("https://4234-114-47-202-96.ngrok-free.app/search", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ no: no }),
-              })
-                .then((response) => {
-                  if (!response.ok) {
-                    throw new Error(
-                      "Network response was not ok: " + response.statusText
-                    );
+              var xhr = new XMLHttpRequest();
+              xhr.open(
+                "POST",
+                "https://4234-114-47-202-96.ngrok-free.app/search",
+                true
+              );
+              xhr.setRequestHeader(
+                "Content-Type",
+                "application/json;charset=UTF-8"
+              );
+
+              xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                  if (xhr.status == 200) {
+                    alert("Received data from backend: " + xhr.responseText);
+                  } else {
+                    alert("Error sending data to backend: " + xhr.statusText);
                   }
-                  return response.json();
-                })
-                .then((data) => {
-                  alert("Received data from backend: " + JSON.stringify(data)); // 使用alert確認回應
-                })
-                .catch((error) => {
-                  alert("Error sending data to backend: " + error.toString());
-                });
+                }
+              };
+
+              xhr.send(JSON.stringify({ no: no }));
             },
           },
         });
