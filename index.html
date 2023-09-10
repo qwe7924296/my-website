@@ -23,6 +23,7 @@
       var vConsole = new VConsole();
     </script>
   </head>
+
   <body>
     <div id="app">
       <div style="float: left; width: 50%">
@@ -41,8 +42,6 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const { ref } = Vue;
-
         const app = Vue.createApp({
           data() {
             return {
@@ -50,9 +49,6 @@
               codeReader: new ZXing.BrowserMultiFormatReader(),
               isScanning: false,
             };
-          },
-          mounted() {
-            this.sendToBackend("144");
           },
           methods: {
             async scanQRCode() {
@@ -77,14 +73,11 @@
                   "reader",
                   (result, err) => {
                     if (result) {
-                      alert("Scanned data: " + result.text);
                       const urlPattern = /https:\/\/qr\.ioi\.tw\/(\d+)/;
                       const numberMatch = result.text.match(urlPattern);
                       if (numberMatch && numberMatch[1]) {
                         this.qrResult = numberMatch[1];
-                        setTimeout(() => {
-                          this.sendToBackend(this.qrResult);
-                        }, 1000); // 延遲1秒調用sendToBackend方法
+                        this.sendToBackend(this.qrResult);
                       } else {
                         this.qrResult = result.text;
                       }
