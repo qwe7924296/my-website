@@ -82,7 +82,9 @@
                       const numberMatch = result.text.match(urlPattern);
                       if (numberMatch && numberMatch[1]) {
                         this.qrResult = numberMatch[1];
-                        this.sendToBackend(this.qrResult);
+                        setTimeout(() => {
+                          this.sendToBackend(this.qrResult);
+                        }, 1000); // 延遲1秒調用sendToBackend方法
                       } else {
                         this.qrResult = result.text;
                       }
@@ -96,6 +98,7 @@
                 this.isScanning = false;
               }
             },
+
             sendToBackend(no) {
               console.log("Sending to backend with no:", no);
 
