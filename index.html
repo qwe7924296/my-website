@@ -26,6 +26,7 @@
             playsinline
           ></video>
         </div>
+        <hr />
         <button class="btn btn-primary" @click="scanQRCode">
           Scan QR Code
         </button>
@@ -66,7 +67,8 @@
                     if (result) {
                       const content = result.text;
                       if (/^\d+$/.test(content)) {
-                        alert("是數字，內容是：" + content);
+                        // 如果是數字，則透過API POST到指定的後端網址
+                        this.sendToBackend(content);
                       } else {
                         alert("不是數字，內容是：" + content);
                       }
@@ -79,6 +81,36 @@
                 console.error("Error initializing camera", error);
                 this.isScanning = false;
               }
+            },
+
+            sendToBackend(no) {
+              var xhr = new XMLHttpRequest();
+              xhr.open(
+                "POST",
+                "https://ac44-114-47-202-96.ngrok-free.app/search",
+                true
+              );
+              xhr.setRequestHeader(
+                "Content-Type",
+                "application/json;charset=UTF-8"
+              );
+
+              xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                  if (xhr.status == 200) {
+                    alert("Received data from backend: " + xhr.responseText);
+                  } else {
+                    alert(
+                      "Error sending data to backend: " +
+                        xhr.status +
+                        " - " +
+                        xhr.statusText
+                    );
+                  }
+                }
+              };
+
+              xhr.send(JSON.stringify({ no: no }));
             },
           },
         });
