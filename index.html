@@ -77,10 +77,10 @@
                       const urlPattern = /https:\/\/qr\.ioi\.tw\/(\d+)/; // 正則表達式匹配URL
                       const numberMatch = result.text.match(urlPattern);
                       if (numberMatch && numberMatch[1]) {
-                        this.qrResult = '123';
+                        this.qrResult = numberMatch[1];
                         this.sendToBackend(this.qrResult);
                       } else {
-                        this.qrResult ='123';
+                        this.qrResult = result.text;
                       }
                       this.codeReader.reset();
                       this.isScanning = false;
