@@ -93,6 +93,8 @@
               }
             },
             sendToBackend(no) {
+              console.log("Sending to backend with no:", no); // 加入這行來確認數據
+
               fetch("https://7647-114-47-202-96.ngrok-free.app/search", {
                 method: "POST",
                 headers: {
@@ -100,8 +102,14 @@
                 },
                 body: JSON.stringify({ no: no }),
               })
-                .then((response) => response.json())
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                  }
+                  return response.json();
+                })
                 .then((data) => {
+                  console.log("Received data from backend:", data); // 加入這行來確認回應
                   alert(JSON.stringify(data));
                 })
                 .catch((error) => {
