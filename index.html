@@ -109,10 +109,14 @@
               xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4) {
                   if (xhr.status == 200) {
-                    // 成功取得API資料後
-                                        alert("Received data from backend: " + xhr.responseText);
+                    alert("Received data from backend: " + xhr.responseText);
 
+                    // 成功取得API資料後
                     this.tableData = JSON.parse(xhr.responseText);
+                    
+                    // 重新初始化 Bootstrap Table
+                    const $table = document.querySelector('table');
+                    $table.bootstrapTable('load', this.tableData);
                   } else {
                     // 失敗
                     alert(
