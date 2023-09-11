@@ -13,6 +13,13 @@
       href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <!-- Bootstrap Table CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.css"
+    />
+    <!-- Bootstrap Table JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.js"></script>
   </head>
 
   <body class="bg-light">
@@ -30,6 +37,8 @@
         <button class="btn btn-primary" @click="scanQRCode">
           Scan QR Code
         </button>
+        <!-- 使用Bootstrap Table的data屬性 -->
+        <table class="mt-4" data-toggle="table" :data="tableData"></table>
       </div>
     </div>
 
@@ -40,6 +49,8 @@
             return {
               codeReader: new ZXing.BrowserMultiFormatReader(),
               isScanning: false,
+              tableHeaders: [], // 新增的屬性
+              tableData: [], // 新增的屬性
             };
           },
           methods: {
@@ -98,8 +109,10 @@
               xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4) {
                   if (xhr.status == 200) {
-                    alert("Received data from backend: " + xhr.responseText);
+                    // 成功取得API資料後
+                    this.tableData = JSON.parse(xhr.responseText);
                   } else {
+                    // 失敗
                     alert(
                       "Error sending data to backend: " +
                         xhr.status +
@@ -108,7 +121,7 @@
                     );
                   }
                 }
-              };
+              }.bind(this); // 注意綁定this
 
               xhr.send(JSON.stringify({ no: no }));
             },
