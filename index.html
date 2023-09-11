@@ -110,6 +110,8 @@
                 if (xhr.readyState == 4) {
                   if (xhr.status == 200) {
                     // 成功取得API資料後
+                                        alert("Received data from backend: " + xhr.responseText);
+
                     this.tableData = JSON.parse(xhr.responseText);
                   } else {
                     // 失敗
