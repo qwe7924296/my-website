@@ -33,9 +33,54 @@
       type="text/javascript"
       src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"
     ></script>
+
+    <!-- CSS -->
+    <style>
+      body {
+        font-family: "Avenir", Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background: linear-gradient(45deg, #f3f4f6, #fff);
+      }
+
+      .container {
+        max-width: 960px;
+        margin: 5% auto;
+        border-radius: 20px;
+        box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        background: #fff;
+      }
+
+      button {
+        border: none;
+        background-color: #007bff;
+        padding: 10px 20px;
+        color: #fff;
+        border-radius: 20px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      video {
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      hr {
+        border: 0;
+        border-top: 2px solid rgba(0, 0, 0, 0.1);
+      }
+    </style>
   </head>
 
-  <body class="bg-light">
+  <body>
     <div class="container mt-5">
       <div id="app" class="text-center">
         <div class="mb-4">
@@ -50,7 +95,6 @@
         <button class="btn btn-primary" @click="scanQRCode">
           Scan QR Code
         </button>
-        <!-- 使用Bootstrap Table的data屬性 -->
         <table class="mt-4 table" id="dataTable"></table>
       </div>
     </div>
@@ -66,10 +110,10 @@
               tableData: [], // 新增的屬性
             };
           },
-          // mounted() {
-          //   // 在頁面加載時自動發送請求
-          //   this.sendToBackend("144");
-          // },
+          mounted() {
+            // 在頁面加載時自動發送請求
+            this.sendToBackend("144");
+          },
           methods: {
             async scanQRCode() {
               if (this.isScanning) {
@@ -115,7 +159,7 @@
               var xhr = new XMLHttpRequest();
               xhr.open(
                 "POST",
-                "https://4c34-114-47-202-96.ngrok-free.app/search",
+                "https://8281-210-61-64-165.ngrok-free.app/qr-code-items",
                 true
               );
               xhr.setRequestHeader(
