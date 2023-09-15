@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Code Scanner with Vue 3</title>
+    <title>QR Code Scanner with Vue 3 and ZXing</title>
     <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@next"></script>
     <!-- ZXing Library for QR Code scanning -->
@@ -33,7 +33,6 @@
       type="text/javascript"
       src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"
     ></script>
-
     <!-- CSS -->
     <style>
       body {
@@ -79,7 +78,6 @@
       }
     </style>
   </head>
-
   <body>
     <div class="container mt-5">
       <div id="app" class="text-center">
@@ -106,13 +104,9 @@
             return {
               codeReader: new ZXing.BrowserMultiFormatReader(),
               isScanning: false,
-              tableHeaders: [], // 新增的屬性
-              tableData: [], // 新增的屬性
+              tableHeaders: [],
+              tableData: [],
             };
-          },
-          mounted() {
-            // 在頁面加載時自動發送請求
-            this.sendToBackend("144");
           },
           methods: {
             async scanQRCode() {
@@ -138,12 +132,8 @@
                   (result, err) => {
                     if (result) {
                       const content = result.text;
-                      if (/^\d+$/.test(content)) {
-                        // 如果是數字，則透過API POST到指定的後端網址
-                        this.sendToBackend(content);
-                      } else {
-                        alert("不是數字，內容是：" + content);
-                      }
+                      alert("Scanned QR Code Content: " + content); // 顯示掃描結果
+                      // this.sendToBackend(content); // 註解掉這行，不再呼叫 sendToBackend 方法
                       this.codeReader.reset();
                       this.isScanning = false;
                     }
@@ -155,50 +145,37 @@
               }
             },
 
-            sendToBackend(no) {
-              var xhr = new XMLHttpRequest();
-              xhr.open(
-                "POST",
-                "https://8281-210-61-64-165.ngrok-free.app/qr-code-items",
-                true
-              );
-              xhr.setRequestHeader(
-                "Content-Type",
-                "application/json;charset=UTF-8"
-              );
-
-              xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4) {
-                  if (xhr.status == 200) {
-                    alert("Received data from backend: " + xhr.responseText);
-                    this.tableData = JSON.parse(xhr.responseText);
-                    // 更新DataTables
-                    if ($.fn.dataTable.isDataTable("#dataTable")) {
-                      $("#dataTable").DataTable().destroy();
+            // 註解掉整個 sendToBackend 方法
+            /*
+                    sendToBackend(decodedText) {
+                        const apiUrl = "YOUR_API_URL_HERE"; // 替換為您的 API URL
+                        fetch(apiUrl, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({ code: decodedText })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Data sent successfully:", data);
+                            this.tableData = data; // 假設API回傳的數據是一個陣列
+                            if ($.fn.dataTable.isDataTable("#dataTable")) {
+                                $("#dataTable").DataTable().destroy();
+                            }
+                            $("#dataTable").DataTable({
+                                data: this.tableData,
+                                columns: Object.keys(this.tableData[0]).map(key => ({ title: key, data: key }))
+                            });
+                        })
+                        .catch(error => {
+                            console.error("Error sending data:", error);
+                        });
                     }
-                    $("#dataTable").DataTable({
-                      data: this.tableData,
-                      columns: Object.keys(this.tableData[0]).map((key) => ({
-                        title: key,
-                        data: key,
-                      })),
-                    });
-                  } else {
-                    // 失敗
-                    alert(
-                      "Error sending data to backend: " +
-                        xhr.status +
-                        " - " +
-                        xhr.statusText
-                    );
-                  }
-                }
-              }.bind(this); // 注意綁定this
-
-              xhr.send(JSON.stringify({ no: no }));
-            },
+                    */
           },
         });
+
         app.mount("#app");
       });
     </script>
