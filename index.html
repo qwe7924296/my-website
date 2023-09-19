@@ -50,54 +50,50 @@
 
 
 <script>
-  const app = Vue.createApp({
+const app = Vue.createApp({
     data() {
-      return {
-        isScanning: false,
-        qrCode: "",
-        inventoryItems: [],
-        codeReader: new ZXing.BrowserQRCodeReader(),
-      };
+        return {
+            isScanning: false,
+            qrCode: '',
+            inventoryItems: [],
+            codeReader: new ZXing.BrowserQRCodeReader()
+        };
     },
     methods: {
-      toggleScanner() {
-        this.isScanning = !this.isScanning;
-        if (this.isScanning) {
-          this.startScanner();
-        } else {
-          this.codeReader.reset();
-        }
-      },
-      startScanner() {
-        this.codeReader.decodeFromVideoDevice(
-          null,
-          "scanner",
-          (result, err) => {
-            if (result) {
-              this.qrCode = result.text;
-              this.getInventoryDetails();
+        toggleScanner() {
+            this.isScanning = !this.isScanning;
+            if (this.isScanning) {
+                this.startScanner();
+            } else {
+                this.codeReader.reset();
             }
-          }
-        );
-      },
-      async getInventoryDetails() {
-        try {
-          const response = await axios.post("Result_back.php", {
-            code: this.qrCode,
-          });
-          this.inventoryItems = response.data;
-        } catch (error) {
-          console.error("There was an error:", error);
+        },
+        startScanner() {
+            this.codeReader.decodeFromVideoDevice(null, 'scanner', (result, err) => {
+                if (result) {
+                    this.qrCode = result.text;
+                    this.getInventoryDetails();
+                }
+            });
+        },
+        async getInventoryDetails() {
+            try {
+                const apiUrl = 'https://8281-210-61-64-165.ngrok-free.app/items';
+                const response = await axios.post(apiUrl, { qrCode: this.qrCode });
+                this.inventoryItems = response.data;
+            } catch (error) {
+                console.error("There was an error:", error);
+            }
+        },
+        handleCount(item) {
+            console.log("盤點:", item);
+            // 根據實際情況處理
+        },
+        handleBorrow(item) {
+            console.log("借用:", item);
+            // 根據實際情況處理
         }
-      },
-      handleCount(item) {
-        console.log("盤點:", item);
-        // 根據實際情況處理
-      },
-      handleBorrow(item) {
-        console.log("借用:", item);
-        // 根據實際情況處理
-      },
-    },
-  }).mount("#app");
+    }
+}).mount("#app");
+
 </script>
