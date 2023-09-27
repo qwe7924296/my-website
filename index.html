@@ -43,11 +43,8 @@
       }
 
       .container {
-        max-width: 960px;
-        margin: 5% auto;
-        border-radius: 20px;
-        box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.1);
-        padding: 30px;
+        max-width: 100%;
+        padding: 10px;
         background: #fff;
       }
 
@@ -68,6 +65,9 @@
       }
 
       video {
+        width: 80vw;
+        max-width: 500px;
+        height: 60vh;
         border-radius: 10px;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
       }
@@ -79,15 +79,10 @@
     </style>
   </head>
   <body>
-    <div class="container mt-5">
+    <div class="container mt-3">
       <div id="app" class="text-center">
         <div class="mb-4">
-          <video
-            id="reader"
-            style="width: 300px; height: 300px"
-            autoplay
-            playsinline
-          ></video>
+          <video id="reader" autoplay playsinline></video>
         </div>
         <hr />
         <button class="btn btn-primary" @click="scanQRCode">
