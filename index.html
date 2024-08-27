@@ -3,179 +3,3078 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>QR Code Scanner with Vue 3 and ZXing</title>
-    <!-- Vue 3 CDN -->
-    <script src="https://unpkg.com/vue@next"></script>
-    <!-- ZXing Library for QR Code scanning -->
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap 5 CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <!-- Bootstrap 5 JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
-    <!-- DataTables CSS -->
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css"
-    />
-    <!-- DataTables JS -->
+    <title>Swimming Game</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script
-      type="text/javascript"
-      src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"
+      type="module"
+      src="https://unpkg.com/@splinetool/viewer@1.9.20/build/spline-viewer.js"
     ></script>
-    <script
-      type="text/javascript"
-      src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"
-    ></script>
-    <!-- CSS -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js"></script>
     <style>
-      body {
-        font-family: "Avenir", Helvetica, Arial, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        background: linear-gradient(45deg, #f3f4f6, #fff);
+      @font-face {
+        font-family: w;
+        src: url(./fonts/WanoQuin-ExtraBold.otf);
       }
 
-      .container {
-        max-width: 100%;
-        padding: 10px;
-        background: #fff;
+      body,
+      html {
+        user-select: none;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        cursor: none;
       }
-
-      button {
+      #app {
+        position: relative;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      .background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("./png/BACKGROUND.webp");
+        background-size: cover;
+        background-position: center;
+        z-index: 1;
+      }
+      .content {
+        z-index: 10;
+        text-align: center;
+        position: relative;
+      }
+      h1 {
+        font-size: 4em;
+        margin-bottom: 20px;
+        font-family: w;
+      }
+      .start-button {
+        background-color: #ffd700;
         border: none;
-        background-color: #007bff;
-        padding: 10px 20px;
-        color: #fff;
-        border-radius: 20px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        transition: background-color 0.3s;
+        color: #000;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: none;
+        border-radius: 25px;
+        transition: all 0.3s ease;
       }
-
-      button:hover {
-        background-color: #0056b3;
+      .start-button:hover {
+        background-color: #ffa500;
+        transform: scale(1.1);
       }
-
-      video {
-        width: 80vw;
-        max-width: 500px;
-        height: 60vh;
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .loading-bar {
+        width: 200px;
+        height: 20px;
+        background-color: #333;
         border-radius: 10px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      .loading-progress {
+        height: 100%;
+        background-color: #ffd700;
+        transition: width 0.3s ease;
+      }
+      .loading-percentage {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ffd700;
+        animation: bounce 0.5s ease infinite alternate;
+      }
+      @keyframes bounce {
+        from {
+          transform: translateY(0px);
+        }
+        to {
+          transform: translateY(-10px);
+        }
+      }
+      spline-viewer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 5;
+      }
+      .sword-cursor {
+        position: fixed;
+        pointer-events: none;
+        z-index: 9999;
+        width: 60px;
+        height: 60px;
+        background-image: url("https://api.iconify.design/game-icons:broadsword.svg?color=white");
+        background-size: contain;
+        background-repeat: no-repeat;
+        transform-origin: center;
+        transition: transform 0.1s;
+        filter: drop-shadow(0 0 10px #00ffff);
+        transform: scaleX(-1);
+      }
+      .sword-cursor::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(
+          circle,
+          rgba(0, 255, 255, 0.5) 0%,
+          rgba(0, 255, 255, 0) 70%
+        );
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .sword-cursor.swing {
+        animation: swordSwing 0.3s ease-in-out;
+      }
+      .sword-cursor.swing::after {
+        opacity: 1;
+        animation: magicPulse 0.3s ease-in-out;
+      }
+      @keyframes swordSwing {
+        0% {
+          transform: scaleX(-1) rotate(0deg);
+        }
+        50% {
+          transform: scaleX(-1) rotate(-90deg);
+        }
+        100% {
+          transform: scaleX(-1) rotate(0deg);
+        }
+      }
+      @keyframes magicPulse {
+        0% {
+          transform: translate(-50%, -50%) scale(0.5);
+          opacity: 0.8;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.5);
+          opacity: 0.4;
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(2);
+          opacity: 0;
+        }
       }
 
-      hr {
-        border: 0;
-        border-top: 2px solid rgba(0, 0, 0, 0.1);
+      .cloud {
+        position: absolute;
+        width: 1200px;
+        height: auto;
+        opacity: 0.8;
+        z-index: 6;
+        animation: floatCloud 20s linear infinite;
+        left: -800px; /* 起始位置在視窗左側外 */
+        bottom: 22vh;
+      }
+      @keyframes floatCloud {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(calc(100vw + 400px));
+        }
+      }
+
+      .cloud2 {
+        position: absolute;
+        width: 1000px;
+        height: auto;
+        opacity: 0.8;
+        z-index: 6;
+        animation: floatCloud2 18s linear infinite;
+        right: -800px; /* 起始位置在視窗右側外 */
+        top: 291px;
+      }
+      @keyframes floatCloud2 {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(calc(-100vw - 800px));
+        }
+      }
+
+      /* GSAP CLOUDE */
+      .engulfing-cloud-left,
+      .engulfing-cloud-right {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        z-index: 7;
+        pointer-events: none;
+      }
+
+      .engulfing-cloud-left {
+        left: -50%;
+        transform: scale(0.5);
+      }
+
+      .engulfing-cloud-right {
+        right: -50%;
+        transform: scale(0.5);
+      }
+
+      /* 第一場戰鬥場景 */
+      .background-2 {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("./PNG/background-2.webp");
+        background-size: cover;
+        background-position: center;
+        z-index: 2;
+        opacity: 0;
+      }
+
+      .background-fire-dance {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("./SKILL/炎尾.png");
+        background-size: cover;
+        background-position: center;
+        z-index: 2;
+        opacity: 0;
+      }
+
+      .disabled-button {
+        pointer-events: none;
+      }
+
+      /* 雲朵禁止拖拉 */
+      .cloud,
+      .cloud2,
+      .engulfing-cloud-left,
+      .engulfing-cloud-right {
+        user-select: none;
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        pointer-events: none;
+      }
+
+      /* 男主角與敵人一號出現 */
+      .knife-rack,
+      .wolf {
+        position: absolute;
+        opacity: 0;
+        z-index: 8;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .knife-rack {
+        width: 20vw;
+        height: auto;
+        bottom: 2vh;
+        left: 26vw;
+        transform: translateX(-50%);
+        z-index: 10;
+      }
+
+      .wolf {
+        width: 30vw;
+        height: auto;
+        top: 10vh;
+        right: 0vw;
+        /* transform: translateX(50%); */
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(-50%, 0);
+        }
+        50% {
+          transform: translate(-50%, -10px);
+        }
+      }
+
+      /* 血條 */
+      /* Health Bar Styles */
+      .sao-healthbar {
+        width: 350px;
+        height: 50px;
+        display: flex;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        opacity: 0;
+        z-index: 9;
+      }
+      .sao-healthbar .main-container {
+        height: 50px;
+        width: 350px;
+        background: rgba(0, 0, 0, 0.6);
+        -webkit-clip-path: polygon(
+          350px 0,
+          330px 36.5px,
+          187px 36.5px,
+          187px 51px,
+          0 51px,
+          0 0
+        );
+        clip-path: polygon(
+          350px 0,
+          330px 36.5px,
+          187px 36.5px,
+          187px 51px,
+          0 51px,
+          0 0
+        );
+        display: flex;
+        align-items: center;
+      }
+      .sao-healthbar .main-container .character-name {
+        width: 60px;
+        color: #fff;
+        text-align: center;
+      }
+      .sao-healthbar .main-container .health-bar--outline {
+        width: 274px;
+        height: 34px;
+        background: #fff;
+        -webkit-clip-path: polygon(
+          262px 20.55px,
+          122.5px 20.55px,
+          113.5px 35px,
+          0 35px,
+          0 0,
+          274px 0
+        );
+        clip-path: polygon(
+          262px 20.55px,
+          122.5px 20.55px,
+          113.5px 35px,
+          0 35px,
+          0 0,
+          274px 0
+        );
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .sao-healthbar .main-container .health-bar--outline .health-bar--border {
+        width: 272px;
+        height: 32px;
+        background: rgba(0, 0, 0, 0.6);
+        -webkit-clip-path: polygon(
+          260px 18px,
+          120px 18px,
+          110px 35px,
+          0 35px,
+          0 0,
+          271px 0
+        );
+        clip-path: polygon(
+          260px 18px,
+          120px 18px,
+          110px 35px,
+          0 35px,
+          0 0,
+          271px 0
+        );
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .sao-healthbar
+        .main-container
+        .health-bar--outline
+        .health-bar--border
+        .health-bar--background {
+        width: 268px;
+        height: 28px;
+        background: #fff;
+        -webkit-clip-path: polygon(
+          256px 14px,
+          116.5px 14px,
+          103.5px 35px,
+          0 35px,
+          0 0,
+          265px 0
+        );
+        clip-path: polygon(
+          256px 14px,
+          116.5px 14px,
+          103.5px 35px,
+          0 35px,
+          0 0,
+          265px 0
+        );
+      }
+      .sao-healthbar
+        .main-container
+        .health-bar--outline
+        .health-bar--border
+        .health-bar--background
+        .health-bar--health {
+        height: 28px;
+        -webkit-clip-path: polygon(100% 0, 0 0, 0 102%, calc(100% - 18px) 102%);
+        clip-path: polygon(100% 0, 0 0, 0 102%, calc(100% - 18px) 102%);
+        transition: width 0.3s ease, background 0.3s ease;
+      }
+      .sao-healthbar .health-indicator {
+        width: 90px;
+        height: 26px;
+        margin: 38px 0 0 189px;
+        padding-right: 10px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 3px 0 0 3px;
+        color: #fff;
+        font-size: 0.8em;
+        line-height: 26px;
+        text-align: right;
+        position: absolute;
+      }
+      .sao-healthbar .character-level {
+        width: 40px;
+        height: 26px;
+        margin: 38px 0 0 291px;
+        padding-left: 10px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 0 3px 3px 0;
+        color: #fff;
+        font-size: 0.8em;
+        line-height: 26px;
+        position: absolute;
+      }
+
+      /* 狼人血条 */
+      .wolf-healthbar {
+        width: 350px;
+        height: 50px;
+        display: flex;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        opacity: 0;
+        z-index: 9;
+      }
+
+      .wolf-healthbar .main-container {
+        height: 50px;
+        width: 350px;
+        background: rgba(0, 0, 0, 0.6);
+        -webkit-clip-path: polygon(
+          350px 0,
+          330px 36.5px,
+          187px 36.5px,
+          187px 51px,
+          0 51px,
+          0 0
+        );
+        clip-path: polygon(
+          350px 0,
+          330px 36.5px,
+          187px 36.5px,
+          187px 51px,
+          0 51px,
+          0 0
+        );
+        display: flex;
+        align-items: center;
+      }
+
+      .wolf-healthbar .main-container .character-name {
+        width: 60px;
+        color: #fff;
+        text-align: center;
+      }
+
+      .wolf-healthbar .main-container .health-bar--outline {
+        width: 274px;
+        height: 34px;
+        background: #fff;
+        -webkit-clip-path: polygon(
+          262px 20.55px,
+          122.5px 20.55px,
+          113.5px 35px,
+          0 35px,
+          0 0,
+          274px 0
+        );
+        clip-path: polygon(
+          262px 20.55px,
+          122.5px 20.55px,
+          113.5px 35px,
+          0 35px,
+          0 0,
+          274px 0
+        );
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .wolf-healthbar .main-container .health-bar--outline .health-bar--border {
+        width: 272px;
+        height: 32px;
+        background: rgba(0, 0, 0, 0.6);
+        -webkit-clip-path: polygon(
+          260px 18px,
+          120px 18px,
+          110px 35px,
+          0 35px,
+          0 0,
+          271px 0
+        );
+        clip-path: polygon(
+          260px 18px,
+          120px 18px,
+          110px 35px,
+          0 35px,
+          0 0,
+          271px 0
+        );
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .wolf-healthbar
+        .main-container
+        .health-bar--outline
+        .health-bar--border
+        .health-bar--background {
+        width: 268px;
+        height: 28px;
+        background: #fff;
+        -webkit-clip-path: polygon(
+          256px 14px,
+          116.5px 14px,
+          103.5px 35px,
+          0 35px,
+          0 0,
+          265px 0
+        );
+        clip-path: polygon(
+          256px 14px,
+          116.5px 14px,
+          103.5px 35px,
+          0 35px,
+          0 0,
+          265px 0
+        );
+      }
+
+      .wolf-healthbar
+        .main-container
+        .health-bar--outline
+        .health-bar--border
+        .health-bar--background
+        .health-bar--health {
+        height: 28px;
+        -webkit-clip-path: polygon(100% 0, 0 0, 0 102%, calc(100% - 18px) 102%);
+        clip-path: polygon(100% 0, 0 0, 0 102%, calc(100% - 18px) 102%);
+        transition: width 0.3s ease, background 0.3s ease;
+      }
+
+      .wolf-healthbar .health-indicator {
+        width: 90px;
+        height: 26px;
+        margin: 38px 0 0 189px;
+        padding-right: 10px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 3px 0 0 3px;
+        color: #fff;
+        font-size: 0.8em;
+        line-height: 26px;
+        text-align: right;
+        position: absolute;
+        right: 0;
+      }
+      /* 題目Card */
+      .question-card {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        max-width: 600px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        z-index: 1000;
+        transition: opacity 0.5s ease;
+      }
+
+      .question-content {
+        text-align: center;
+      }
+
+      .question-title {
+        color: #fff;
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      }
+
+      .options-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      .option-button {
+        background: rgba(0, 255, 255, 0.2);
+        border: 2px solid rgba(0, 255, 255, 0.5);
+        color: #fff;
+        padding: 15px;
+        font-size: 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .option-button:hover {
+        background: rgba(0, 255, 255, 0.4);
+        transform: scale(1.05);
+      }
+
+      .option-button:active {
+        transform: scale(0.95);
       }
     </style>
   </head>
   <body>
-    <div class="container mt-3">
-      <div id="app" class="text-center">
-        <div class="mb-4">
-          <video id="reader" autoplay playsinline></video>
+    <div id="app">
+      <div class="background"></div>
+      <div class="background-2"></div>
+      <div class="background-fire-dance"></div>
+      <!-- 男主角 -->
+      <img
+        src="./SKILL/刀架.png"
+        alt="Knife Rack"
+        class="knife-rack"
+        ref="knifeRack"
+      />
+      <!-- 敵人一號 狼人 -->
+      <img src="./SKILL/wolf.png" alt="Wolf" class="wolf" ref="wolf" />
+
+      <!-- 男主角血條 -->
+      <div class="sao-healthbar" ref="healthBar">
+        <div class="main-container">
+          <div class="character-name">Kirito</div>
+          <div class="health-bar--outline">
+            <div class="health-bar--border">
+              <div class="health-bar--background">
+                <div
+                  class="health-bar--health"
+                  :style="{ 
+                    width: healthPercentage + '%',
+                    background: healthBarColor
+                  }"
+                ></div>
+              </div>
+            </div>
+          </div>
         </div>
-        <hr />
-        <button class="btn btn-primary" @click="scanQRCode">
-          Scan QR Code
-        </button>
-        <table class="mt-4 table" id="dataTable"></table>
+        <div class="health-indicator">{{ health }} / {{ maxHealth }}</div>
+        <div class="character-level">LV: {{ level }}</div>
       </div>
+
+      <!-- 狼人血條 -->
+      <div class="wolf-healthbar" ref="wolfHealthBar">
+        <div class="main-container">
+          <div class="character-name">Wolf</div>
+          <div class="health-bar--outline">
+            <div class="health-bar--border">
+              <div class="health-bar--background">
+                <div
+                  class="health-bar--health"
+                  :style="{ 
+                    width: wolfHealthPercentage + '%',
+                    background: wolfHealthBarColor
+                  }"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="health-indicator">
+          {{ wolfHealth }} / {{ wolfMaxHealth }}
+        </div>
+      </div>
+
+      <!-- 題目card -->
+      <div
+        class="question-card"
+        v-if="showQuestionCard"
+        :style="{ opacity: questionCardOpacity }"
+      >
+        <div class="question-content">
+          <h2 class="question-title">
+            第 {{ currentQuestionIndex + 1 }} 题：{{ currentQuestion.question }}
+          </h2>
+          <div class="options-container">
+            <button
+              v-for="(option, index) in currentQuestion.options"
+              :key="index"
+              class="option-button"
+              @click="checkAnswer(index)"
+            >
+              {{ option }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 雲朵相關 -->
+      <img
+        src="./PNG/CLAUDE1.png"
+        alt="Floating Cloud 1"
+        class="cloud"
+        draggable="false"
+      />
+      <img
+        src="./PNG/CLAUDE2.png"
+        alt="Floating Cloud 2"
+        class="cloud2"
+        draggable="false"
+      />
+
+      <!-- 新增的雲朵 -->
+      <img
+        src="./PNG/CLAUDE1.png"
+        alt="Engulfing Cloud Left"
+        class="engulfing-cloud-left"
+        draggable="false"
+      />
+      <img
+        src="./PNG/CLAUDE2.png"
+        alt="Engulfing Cloud Right"
+        class="engulfing-cloud-right"
+        draggable="false"
+      />
+
+      <div class="loading-overlay" v-if="!loaded">
+        <div class="loading-bar">
+          <div
+            class="loading-progress"
+            :style="{ width: loadingProgress + '%' }"
+          ></div>
+        </div>
+        <div class="loading-percentage">{{ Math.floor(loadingProgress) }}%</div>
+      </div>
+      <spline-viewer
+        v-if="loaded"
+        url="https://prod.spline.design/DINceGiZydvsE67f/scene.splinecode"
+        @mousedown="onMouseDown"
+        @mousemove="onMouseMove"
+        @mouseup="onMouseUp"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+      ></spline-viewer>
+      <div class="content">
+        <h1 class="game-title">{{ title }}</h1>
+        <button @click="startGame" class="start-button" ref="startButton">
+          {{ startButtonText }}
+        </button>
+      </div>
+      <div
+        class="sword-cursor"
+        :style="swordStyle"
+        :class="{ swing: isSwinging }"
+      ></div>
+      <audio ref="backgroundMusic" loop>
+        <source src="./PNG/ob3s0-cuk57.mp3" type="audio/mpeg" />
+        Your browser does not support the audio element.
+      </audio>
     </div>
 
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const app = Vue.createApp({
-          data() {
-            return {
-              codeReader: new ZXing.BrowserMultiFormatReader(),
-              isScanning: false,
-              tableHeaders: [],
-              tableData: [],
-            };
-          },
-          methods: {
-            async scanQRCode() {
-              if (this.isScanning) {
-                console.log("Already scanning...");
-                return;
-              }
+      // 在 createApp 之前添加這行
+      // customElements.define("spline-viewer", class extends HTMLElement {});
+      const { createApp, ref, onMounted, reactive, computed } = Vue;
 
-              this.isScanning = true;
+      createApp({
+        setup() {
+          const title = ref("Swimming Game");
+          const startButtonText = ref("START");
+          const loaded = ref(false);
+          const startButton = ref(null);
+          const loadingProgress = ref(0);
+          const knifeRack = ref(null);
+          const wolf = ref(null);
+          const swordStyle = reactive({
+            left: "0px",
+            top: "0px",
+          });
+          const isSwinging = ref(false);
+          const backgroundMusic = ref(null);
+          // 血條
+          const healthBar = ref(null);
+          const wolfHealthBar = ref(null); // 添加这一行
+          const health = ref(255);
+          const maxHealth = ref(255);
+          const level = ref(3);
+          const wolfHealth = ref(255);
+          const wolfMaxHealth = ref(255);
 
-              try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const rearCamera = devices.find(
-                  (device) =>
-                    device.kind === "videoinput" &&
-                    /back|rear/i.test(device.label)
-                );
-                const cameraId = rearCamera ? rearCamera.deviceId : undefined;
-
-                this.codeReader.decodeFromVideoDevice(
-                  cameraId,
-                  "reader",
-                  (result, err) => {
-                    if (result) {
-                      const content = result.text;
-                      alert("Scanned QR Code Content: " + content); // 顯示掃描結果
-                      this.sendToBackend(content); // 註解掉這行，不再呼叫 sendToBackend 方法
-                      this.codeReader.reset();
-                      this.isScanning = false;
-                    }
-                  }
-                );
-              } catch (error) {
-                console.error("Error initializing camera", error);
-                this.isScanning = false;
-              }
+          // 題庫
+          const showQuestionCard = ref(false);
+          const questionCardOpacity = ref(0);
+          const questions = ref([
+            {
+              question: "請問：游泳的起源是什麼？",
+              options: ["捕獵逃避", "夏天消暑", "懲罰罪犯", "冬天泡澡"],
+              answer: 0,
+              errorFunction: error1,
+              attackFunction: attack1,
             },
+            {
+              question: "請問：現代游泳起源於哪個國家？",
+              options: ["中國", "英國", "美國", "希臘"],
+              answer: 1,
+              errorFunction: error2,
+              attackFunction: attack2,
+            },
+            {
+              question: "請問：哪一個人得到台灣史上世大運游泳首面獎牌？",
+              options: ["王星皓", "朱木炎", "王冠閎", "王齊麟"],
+              answer: 0,
+              errorFunction: error3,
+              attackFunction: attack3,
+            },
+            {
+              question: "請問：誰代表台灣出賽2024奧運比賽游泳？",
+              options: ["王星皓", "朱木炎", "王冠閎", "王齊麟"],
+              answer: 2,
+              errorFunction: error4,
+              attackFunction: attack4,
+            },
+            {
+              question: "請問：哪一式又稱為捷泳？",
+              options: ["蝶式", "蛙式", "仰式", "自由式"],
+              answer: 3,
+              errorFunction: error5,
+              attackFunction: attack5,
+            },
+            {
+              question: "請問：哪一種游泳姿勢是第一個比賽泳姿？",
+              options: ["蝶式", "自由式", "蛙式", "狗爬式"],
+              answer: 2,
+              errorFunction: error6,
+              attackFunction: attack6,
+            },
+            {
+              question: "請問：哪一種游泳姿勢是最慢的泳姿？",
+              options: ["蛙式", "蝶式", "自由式", "狗爬式"],
+              answer: 1,
+              errorFunction: error7,
+              attackFunction: attack7,
+            },
+            {
+              question: "請問：哪一種游泳姿勢是最優美的？",
+              options: ["自由式", "仰式", "蝶式", "蛙式"],
+              answer: 2,
+              errorFunction: error8,
+              attackFunction: attack8,
+            },
+            {
+              question: "請問：哪一式游泳速度最快？",
+              options: ["蛙式", "蝶式", "自由式", "狗爬式"],
+              answer: 2,
+              errorFunction: error9,
+              attackFunction: attack9,
+            },
+            {
+              question: "請問：蝶泳是因為哪個國家選手違反蛙泳規則而增加的？",
+              options: ["美國", "日本", "德國", "法國"],
+              answer: 2,
+              errorFunction: error10,
+              attackFunction: attack10,
+            },
+          ]);
 
-            // 註解掉整個 sendToBackend 方法
+          const currentQuestionIndex = ref(0);
+          const currentQuestion = computed(
+            () => questions.value[currentQuestionIndex.value]
+          );
 
-            sendToBackend(decodedText) {
-              const apiUrl =
-                "https://2aa7-210-61-64-165.ngrok-free.app/api/getQRcodeFromCamera/"; // 替換為您的 API URL
-              fetch(apiUrl, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ code: decodedText }),
-              })
-                .then((response) => response.json())
-                .then((data) => {
-                  console.log("Data sent successfully:", data);
-                  this.tableData = data; // 假設API回傳的數據是一個陣列
-                  if ($.fn.dataTable.isDataTable("#dataTable")) {
-                    $("#dataTable").DataTable().destroy();
+          // 修改 showQuestion 函数
+          const showQuestion = () => {
+            showQuestionCard.value = true;
+            gsap.to(questionCardOpacity, {
+              value: 1,
+              duration: 1,
+              ease: "power2.inOut",
+            });
+          };
+
+          const checkAnswer = (selectedIndex) => {
+            // 首先隐藏问题卡片
+            hideQuestionCard().then(() => {
+              if (selectedIndex === currentQuestion.value.answer) {
+                currentQuestion.value.attackFunction().then(() => {
+                  if (currentQuestionIndex.value < questions.value.length - 1) {
+                    currentQuestionIndex.value++;
+                  } else {
+                    // 所有问题回答完毕，玩家胜利
+                    // alert("恭喜! 你成功斬殺了狼人!");
+                    return;
                   }
-                  $("#dataTable").DataTable({
-                    data: this.tableData,
-                    columns: Object.keys(this.tableData[0]).map((key) => ({
-                      title: key,
-                      data: key,
-                    })),
+                  showQuestion();
+                });
+              } else {
+                currentQuestion.value.errorFunction().then(() => {
+                  showQuestion();
+                });
+              }
+            });
+          };
+
+          // 隐藏问题卡片的函数
+          const hideQuestionCard = () => {
+            return gsap.to(questionCardOpacity, {
+              value: 0,
+              duration: 0.3,
+              ease: "power2.inOut",
+            });
+          };
+
+          // 定義錯誤和攻擊函數
+          function error1() {
+            console.log("錯誤回答問題1");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(10);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          // 修改 attack1 函数
+          function attack1() {
+            console.log("正確回答問題1");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(5);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.to(".background-2", {
+                filter: "brightness(0)",
+                duration: 1,
+                ease: "power2.inOut",
+              })
+
+                // 2. 刀架放大縮小動畫
+                .to(knifeRack.value, {
+                  scale: 1.5,
+                  duration: 0.3,
+                  ease: "power2.out",
+                  onStart: () => {
+                    // 創建紅色光圈
+                    const redGlow = document.createElement("div");
+                    redGlow.style.position = "absolute";
+                    redGlow.style.left = "50%";
+                    redGlow.style.top = "50%";
+                    redGlow.style.width = "0";
+                    redGlow.style.height = "0";
+                    redGlow.style.borderRadius = "50%";
+                    redGlow.style.backgroundColor = "rgba(255, 0, 0, 0.6)";
+                    redGlow.style.transform = "translate(-50%, -50%)";
+                    redGlow.style.zIndex = "9";
+                    knifeRack.value.parentNode.insertBefore(
+                      redGlow,
+                      knifeRack.value
+                    );
+
+                    // 光圈動畫
+                    gsap.to(redGlow, {
+                      width: "1500px",
+                      height: "1500px",
+                      opacity: 0,
+                      duration: 0.6,
+                      ease: "power2.out",
+                      onComplete: () => redGlow.remove(),
+                    });
+                  },
+                })
+                .to(knifeRack.value, {
+                  scale: 1,
+                  duration: 0.3,
+                  ease: "power2.in",
+                })
+
+                // 3. 切換背景
+                .to(
+                  ".background-2",
+                  {
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                )
+                .to(
+                  ".background-fire-dance",
+                  {
+                    opacity: 1,
+                    duration: 1,
+                    ease: "power2.inOut",
+                  },
+                  "<"
+                )
+
+                // 4. 刀架圖片變化
+                .to(knifeRack.value, {
+                  opacity: 0,
+                  duration: 0.5,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    knifeRack.value.src = "./SKILL/炎尾第一式.png";
+                  },
+                })
+                .to(knifeRack.value, {
+                  opacity: 1,
+                  duration: 0.5,
+                  width: "36vw",
+                  bottom: "-8vh",
+                  left: "28vw",
+                  ease: "power2.in",
+                })
+
+                // 5. 斬擊特效
+                .call(() => {
+                  const slashEffect = document.createElement("div");
+                  slashEffect.style.position = "absolute";
+                  slashEffect.style.left = "30vw";
+                  slashEffect.style.top = "-6vh";
+                  slashEffect.style.width = "89vw";
+                  slashEffect.style.height = "100vh";
+                  slashEffect.style.backgroundImage =
+                    "url('./SKILL/火焰斬下斬.png')";
+                  slashEffect.style.backgroundSize = "contain";
+                  slashEffect.style.backgroundRepeat = "no-repeat";
+                  slashEffect.style.backgroundPosition = "center";
+                  slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                  slashEffect.style.zIndex = "12";
+                  knifeRack.value.parentNode.appendChild(slashEffect);
+
+                  gsap.to(slashEffect, {
+                    clipPath: "inset(0% 0 0 0)",
+                    duration: 0.8,
+                    ease: "power1.inOut",
+                    onComplete: () => {
+                      gsap.to(slashEffect, {
+                        opacity: 0,
+                        duration: 0.2,
+                        ease: "power2.out",
+                        onComplete: () => slashEffect.remove(),
+                      });
+                    },
                   });
                 })
-                .catch((error) => {
-                  console.error("Error sending data:", error);
-                });
-            },
-          },
-        });
 
-        app.mount("#app");
-      });
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error2() {
+            console.log("錯誤回答問題2");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(20);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack2() {
+            console.log("正確回答問題2");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(10);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error3() {
+            console.log("錯誤回答問題3");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(30);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack3() {
+            console.log("正確回答問題3");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(15);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error4() {
+            console.log("錯誤回答問題4");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(40);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack4() {
+            console.log("正確回答問題4");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(20);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error5() {
+            console.log("錯誤回答問題5");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(50);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack5() {
+            console.log("正確回答問題5");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(25);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error6() {
+            console.log("錯誤回答問題6");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(60);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack6() {
+            console.log("正確回答問題6");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(25);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error7() {
+            console.log("錯誤回答問題7");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(70);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack7() {
+            console.log("正確回答問題7");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(30);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error8() {
+            console.log("錯誤回答問題8");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(80);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack8() {
+            console.log("正確回答問題8");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(35);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error9() {
+            console.log("錯誤回答問題9");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(90);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack9() {
+            console.log("正確回答問題9");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(40);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 定義錯誤和攻擊函數
+          function error10() {
+            console.log("錯誤回答問題10");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseHealth(100);
+                  resolve();
+                },
+              });
+
+              // 创建爪痕效果（在动画开始前就创建）
+              const attackEffect = document.createElement("img");
+              attackEffect.src = "./SKILL/wolf-attack.png";
+              attackEffect.style.position = "absolute";
+              attackEffect.style.left = "22vw";
+              attackEffect.style.top = "-50vh";
+              attackEffect.style.opacity = "0";
+              attackEffect.style.zIndex = "11";
+              attackEffect.style.transform = "scale(0.5)";
+              knifeRack.value.parentNode.appendChild(attackEffect);
+
+              // 狼人跳跃动画和爪痕动画同时进行
+              tl.to(wolf.value, {
+                right: "10vw",
+                top: "8vh",
+                width: "40vw",
+                duration: 0.6,
+                ease: "power2.out",
+              })
+                .to(
+                  attackEffect,
+                  {
+                    opacity: 1,
+                    top: "35vh",
+                    duration: 0.3,
+                    ease: "power2.in",
+                  },
+                  "-=0.3"
+                ) // 在狼人动画进行到一半时开始爪痕动画
+                .to(attackEffect, {
+                  scale: 1.5,
+                  rotation: 5,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: -5,
+                  x: "-=40",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+                .to(attackEffect, {
+                  rotation: 0,
+                  x: "+=20",
+                  duration: 0.1,
+                  ease: "power1.inOut",
+                })
+
+                // 刀架闪烁动画
+                .to(
+                  knifeRack.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 3,
+                    yoyo: true,
+                  },
+                  "-=0.2"
+                )
+
+                // 爪痕消失
+                .to(attackEffect, {
+                  opacity: 0,
+                  scale: 2,
+                  duration: 0.2,
+                  ease: "power2.out",
+                  onComplete: () => {
+                    attackEffect.remove();
+                  },
+                })
+
+                // 狼人返回原位
+                .to(
+                  wolf.value,
+                  {
+                    right: "0vw",
+                    top: "10vh",
+                    width: "30vw",
+                    duration: 0.6,
+                    ease: "power2.inOut",
+                  },
+                  "-=0.3"
+                );
+            });
+          }
+
+          function attack10() {
+            console.log("正確回答問題10");
+            return new Promise((resolve) => {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  decreaseWolfHealth(50);
+                  resolve();
+                },
+              });
+
+              // 1. 背景變黑
+              tl.call(() => {
+                const slashEffect = document.createElement("div");
+                slashEffect.style.position = "absolute";
+                slashEffect.style.left = "30vw";
+                slashEffect.style.top = "-6vh";
+                slashEffect.style.width = "89vw";
+                slashEffect.style.height = "100vh";
+                slashEffect.style.backgroundImage =
+                  "url('./SKILL/火焰斬下斬.png')";
+                slashEffect.style.backgroundSize = "contain";
+                slashEffect.style.backgroundRepeat = "no-repeat";
+                slashEffect.style.backgroundPosition = "center";
+                slashEffect.style.clipPath = "inset(100% 0 0 0)";
+                slashEffect.style.zIndex = "12";
+                knifeRack.value.parentNode.appendChild(slashEffect);
+
+                gsap.to(slashEffect, {
+                  clipPath: "inset(0% 0 0 0)",
+                  duration: 0.8,
+                  ease: "power1.inOut",
+                  onComplete: () => {
+                    gsap.to(slashEffect, {
+                      opacity: 0,
+                      duration: 0.2,
+                      ease: "power2.out",
+                      onComplete: () => slashEffect.remove(),
+                    });
+                  },
+                });
+              })
+
+                // 6. 狼人閃爍
+                .to(
+                  wolf.value,
+                  {
+                    opacity: 0,
+                    duration: 0.1,
+                    repeat: 5,
+                    yoyo: true,
+                  },
+                  "+=0.4"
+                );
+            });
+          }
+
+          // 血條作用
+          const healthPercentage = computed(() => {
+            return (health.value / maxHealth.value) * 100;
+          });
+          const wolfHealthPercentage = computed(() => {
+            return (wolfHealth.value / wolfMaxHealth.value) * 100;
+          });
+
+          const healthBarColor = computed(() => {
+            if (health.value <= 60) {
+              return "linear-gradient(to bottom, #ff0000 0%, #ff3333 100%)";
+            } else if (health.value <= 100) {
+              return "linear-gradient(to bottom, #ffff00 0%, #ffff33 100%)";
+            } else {
+              return "linear-gradient(to bottom, #71af1b 0%, #94c94f 100%)";
+            }
+          });
+
+          const wolfHealthBarColor = computed(() => {
+            if (wolfHealth.value <= 60) {
+              return "linear-gradient(to bottom, #ff0000 0%, #ff3333 100%)";
+            } else if (wolfHealth.value <= 100) {
+              return "linear-gradient(to bottom, #ffff00 0%, #ffff33 100%)";
+            } else {
+              return "linear-gradient(to bottom, #71af1b 0%, #94c94f 100%)";
+            }
+          });
+
+          const decreaseHealth = (amount) => {
+            health.value = Math.max(0, health.value - amount);
+            if (health.value === 0) {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  // 顯示Game Over消息
+                  const gameOverMessage = document.createElement("div");
+                  gameOverMessage.textContent = "Game Over";
+                  gameOverMessage.style.position = "absolute";
+                  gameOverMessage.style.top = "50%";
+                  gameOverMessage.style.left = "50%";
+                  gameOverMessage.style.transform = "translate(-50%, -50%)";
+                  gameOverMessage.style.fontSize = "48px";
+                  gameOverMessage.style.color = "#ffffff";
+                  gameOverMessage.style.textShadow =
+                    "2px 2px 4px rgba(0,0,0,0.5)";
+                  gameOverMessage.style.zIndex = "1000";
+                  document.body.appendChild(gameOverMessage);
+                },
+              });
+
+              // 移除問題卡片
+              const questionCard = document.querySelector(".question-card");
+              if (questionCard) {
+                questionCard.remove();
+              }
+
+              // 確保相關的 Vue 響應式變量也被重置
+              showQuestionCard.value = false;
+              questionCardOpacity.value = 0;
+
+              // 角色漸漸消失的動畫
+              tl.to(knifeRack.value, {
+                opacity: 0,
+                duration: 2,
+                ease: "power2.inOut",
+                onUpdate: function () {
+                  // 使用 clip-path 來創建分解效果
+                  const progress = this.progress();
+                  knifeRack.value.style.clipPath = `polygon(${
+                    progress * 50
+                  }% 0%, 100% 0%, 100% 100%, ${progress * 50}% 100%)`;
+                },
+              });
+
+              // 切換背景
+              const backgroundFireDance = document.querySelector(
+                ".background-fire-dance"
+              );
+              const background2 = document.querySelector(".background-2");
+
+              if (getComputedStyle(backgroundFireDance).opacity === "0") {
+                // 如果 background-fire-dance 的 opacity 為 0，則切換 background-2
+                tl.to(
+                  background2,
+                  {
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                      background2.style.backgroundImage =
+                        "url('./SKILL/LOSE.webp')";
+                    },
+                  },
+                  "-=1"
+                );
+
+                tl.to(background2, {
+                  opacity: 1,
+                  duration: 1,
+                  ease: "power2.inOut",
+                });
+              } else {
+                // 否則切換 background-fire-dance
+                tl.to(
+                  backgroundFireDance,
+                  {
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                      backgroundFireDance.style.backgroundImage =
+                        "url('./SKILL/LOSE.webp')";
+                    },
+                  },
+                  "-=1"
+                );
+
+                tl.to(backgroundFireDance, {
+                  opacity: 1,
+                  duration: 1,
+                  ease: "power2.inOut",
+                });
+              }
+
+              // 移除不需要的元素
+              tl.call(() => {
+                wolf.value.remove();
+                healthBar.value.remove();
+                wolfHealthBar.value.remove();
+              });
+            }
+          };
+          const decreaseWolfHealth = (amount) => {
+            wolfHealth.value = Math.max(0, wolfHealth.value - amount);
+            if (wolfHealth.value === 0) {
+              const tl = gsap.timeline({
+                onComplete: () => {
+                  // 顯示獲勝消息
+                  const victoryMessage = document.createElement("div");
+                  victoryMessage.textContent = "恭喜你殺死狼人";
+                  victoryMessage.style.position = "absolute";
+                  victoryMessage.style.top = "50%";
+                  victoryMessage.style.left = "50%";
+                  victoryMessage.style.transform = "translate(-50%, -50%)";
+                  victoryMessage.style.fontSize = "48px";
+                  victoryMessage.style.color = "#ffffff";
+                  victoryMessage.style.textShadow =
+                    "2px 2px 4px rgba(0,0,0,0.5)";
+                  victoryMessage.style.zIndex = "1000";
+                  document.body.appendChild(victoryMessage);
+                },
+              });
+
+              // 狼人漸漸消失的動畫
+              tl.to(wolf.value, {
+                opacity: 0,
+                duration: 2,
+                ease: "power2.inOut",
+                onUpdate: function () {
+                  // 使用 clip-path 來創建分解效果
+                  const progress = this.progress();
+                  wolf.value.style.clipPath = `polygon(${
+                    progress * 50
+                  }% 0%, 100% 0%, 100% 100%, ${progress * 50}% 100%)`;
+                },
+              });
+
+              // 切換背景
+              tl.to(
+                ".background-fire-dance",
+                {
+                  opacity: 0,
+                  duration: 1,
+                  ease: "power2.inOut",
+                  onComplete: () => {
+                    document.querySelector(
+                      ".background-fire-dance"
+                    ).style.backgroundImage = "url('./SKILL/END.webp')";
+                  },
+                },
+                "-=1"
+              );
+
+              tl.to(".background-fire-dance", {
+                opacity: 1,
+                duration: 1,
+                ease: "power2.inOut",
+              });
+
+              // 移除不需要的元素
+              tl.call(() => {
+                knifeRack.value.remove();
+                healthBar.value.remove();
+                wolfHealthBar.value.remove();
+              });
+            }
+          };
+
+          const startGame = () => {
+            const tl = gsap.timeline();
+
+            // 禁用开始按钮，防止重复点击
+            startButton.value.classList.add("disabled-button");
+
+            // 背景放大和雲朵動畫
+            tl.to(".background", {
+              duration: 1.2,
+              scale: 5.5,
+              ease: "power2.inOut",
+            })
+              .to(
+                ".game-title, .start-button",
+                {
+                  duration: 1.2,
+                  opacity: 0,
+                  y: -50,
+                  ease: "power2.inOut",
+                },
+                "<"
+              ) // "<" 表示与前一个动画同时开始
+              .to(
+                ".engulfing-cloud-left",
+                {
+                  duration: 1.2,
+                  opacity: 0.8,
+                  left: "0%",
+                  scale: 4,
+                  ease: "power2.inOut",
+                },
+                "<"
+              )
+              .to(
+                ".engulfing-cloud-right",
+                {
+                  duration: 1.2,
+                  opacity: 0.8,
+                  right: "0%",
+                  scale: 4,
+                  ease: "power2.inOut",
+                },
+                "<"
+              )
+
+              // 背景淡出
+              .to(
+                ".background",
+                {
+                  duration: 1,
+                  opacity: 0,
+                  ease: "power2.inOut",
+                },
+                "+=0.5"
+              )
+
+              // 切換到新背景
+              .set(".background-2", { opacity: 1 })
+
+              // 雲朵倒退消失
+              .to(".engulfing-cloud-left", {
+                duration: 1.2,
+                opacity: 0,
+                left: "-50%",
+                scale: 0.5,
+                ease: "power2.inOut",
+              })
+              .to(
+                ".engulfing-cloud-right",
+                {
+                  duration: 1.2,
+                  opacity: 0,
+                  right: "-50%",
+                  scale: 0.5,
+                  ease: "power2.inOut",
+                },
+                "<"
+              )
+
+              // 新背景縮小到原始大小
+              .to(
+                ".background-2",
+                {
+                  duration: 1.2,
+                  scale: 1,
+                  ease: "power2.inOut",
+                },
+                "<"
+              )
+              .call(() => {
+                startButton.value.remove();
+              })
+              // 添加刀架與敵人一號 狼人的淡入動畫
+              .to(
+                [
+                  knifeRack.value,
+                  wolf.value,
+                  healthBar.value,
+                  wolfHealthBar.value,
+                ],
+                {
+                  duration: 2,
+                  opacity: 1,
+                  ease: "power2.inOut",
+                }
+              )
+              .call(() => {
+                showQuestion();
+              });
+          };
+
+          const simulateLoading = () => {
+            const totalDuration = 5000;
+            const intervalDuration = 100;
+            const steps = totalDuration / intervalDuration;
+            const incrementPerStep = 100 / steps;
+
+            const interval = setInterval(() => {
+              loadingProgress.value += incrementPerStep;
+              if (loadingProgress.value >= 100) {
+                loadingProgress.value = 100;
+                clearInterval(interval);
+                setTimeout(() => {
+                  loaded.value = true;
+                  playBackgroundMusic(); // 在加載完成後嘗試播放音樂
+                }, 500);
+              }
+            }, intervalDuration);
+          };
+
+          const playBackgroundMusic = () => {
+            if (backgroundMusic.value) {
+              backgroundMusic.value.play().catch((error) => {
+                console.error("自動播放失敗:", error);
+                console.log("用戶可能需要與頁面互動才能開始播放音樂");
+                // 如果自動播放失敗，我們添加一個一次性的點擊事件監聽器
+                const playOnInteraction = () => {
+                  backgroundMusic.value.play();
+                  document.removeEventListener("click", playOnInteraction);
+                };
+                document.addEventListener("click", playOnInteraction);
+              });
+            }
+          };
+
+          onMounted(() => {
+            document.addEventListener("contextmenu", (e) => e.preventDefault());
+            document.addEventListener("selectstart", (e) => e.preventDefault());
+            simulateLoading();
+            document.addEventListener("mousemove", updateSwordPosition);
+            document.addEventListener("click", swingSword);
+            backgroundMusic.value = document.querySelector("audio");
+
+            // 添加阻止拖拽的事件监听器
+            const clouds = document.querySelectorAll(
+              ".cloud, .cloud2, .engulfing-cloud-left, .engulfing-cloud-right"
+            );
+            clouds.forEach((cloud) => {
+              cloud.addEventListener("dragstart", (e) => e.preventDefault());
+              cloud.addEventListener("mousedown", (e) => e.preventDefault());
+            });
+          });
+
+          const updateSwordPosition = (event) => {
+            swordStyle.left = `${event.clientX}px`;
+            swordStyle.top = `${event.clientY}px`;
+          };
+
+          const swingSword = () => {
+            isSwinging.value = true;
+            const swordSound = new Audio("./PNG/673.wav");
+            swordSound.play();
+            setTimeout(() => {
+              isSwinging.value = false;
+            }, 300);
+          };
+
+          let isMouseDown = false;
+          const onMouseDown = () => {
+            isMouseDown = true;
+          };
+          const onMouseUp = () => {
+            isMouseDown = false;
+          };
+          const onMouseMove = (event) => {
+            if (isMouseDown) {
+              const spline = event.target;
+              if (spline) {
+                spline.mouseX = event.clientX;
+                spline.mouseY = event.clientY;
+              }
+            }
+            updateSwordPosition(event);
+          };
+
+          const onTouchStart = (event) => {
+            isMouseDown = true;
+            onTouchMove(event);
+          };
+          const onTouchEnd = () => {
+            isMouseDown = false;
+          };
+          const onTouchMove = (event) => {
+            if (isMouseDown && event.touches.length > 0) {
+              const touch = event.touches[0];
+              const spline = event.target;
+              if (spline) {
+                spline.mouseX = touch.clientX;
+                spline.mouseY = touch.clientY;
+              }
+              updateSwordPosition({
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+              });
+            }
+          };
+
+          return {
+            title,
+            startButtonText,
+            startGame,
+            loaded,
+            loadingProgress,
+            onMouseDown,
+            onMouseMove,
+            onMouseUp,
+            onTouchStart,
+            onTouchMove,
+            onTouchEnd,
+            swordStyle,
+            isSwinging,
+            backgroundMusic,
+            startButton,
+            knifeRack,
+            wolf,
+            healthBar,
+            wolfHealthBar,
+            health,
+            maxHealth,
+            level,
+            wolfHealth,
+            wolfMaxHealth,
+            healthPercentage,
+            wolfHealthPercentage,
+            healthBarColor,
+            wolfHealthBarColor,
+            decreaseHealth,
+            decreaseWolfHealth,
+            checkAnswer,
+            questions,
+            currentQuestion,
+            showQuestion,
+            error1,
+            attack1,
+            error2,
+            attack2,
+            error3,
+            attack3,
+            error4,
+            attack4,
+            error5,
+            attack5,
+            error6,
+            attack6,
+            error7,
+            attack7,
+            error8,
+            attack8,
+            error9,
+            attack9,
+            error10,
+            attack10,
+            showQuestionCard,
+            questionCardOpacity,
+            currentQuestionIndex,
+          };
+        },
+      }).mount("#app");
     </script>
   </body>
 </html>
